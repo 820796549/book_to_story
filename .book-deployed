@@ -1,0 +1,5 @@
+system=book-to-article
+target_cli=codex
+deployed_at=2026-07-07
+status=initialized
+entry_skill=book

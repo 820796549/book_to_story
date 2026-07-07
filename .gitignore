@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Project
+oh-story-claudecode-main/
+
+# Tracking
+**/追踪/上下文.md
+**/追踪/session-log.md
+
+# Temp
+*.tmp
+*.log
+
