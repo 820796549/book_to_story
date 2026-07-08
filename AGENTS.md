@@ -10,25 +10,38 @@
 
 | 命令 | Skill | 说明 |
 |---|---|---|
-| `$book` | book | 主入口，自动判断当前任务并路由 |
-| `$book-setup` | book-setup | 初始化拆书写作项目 |
-| `$book-architect` | book-architect | 书籍定位、目标用户、栏目体系 |
-| `$book-reverse-style` | book-reverse-style | 竞品/样文深反推 |
-| `$book-decode-source` | book-decode-source | 原文拆解、证据提取 |
-| `$book-extract-model` | book-extract-model | 模型提炼、推理链整理 |
-| `$book-map-application` | book-map-application | 现实迁移、认知破局映射 |
-| `$book-write-column` | book-write-column | 栏目文章成稿 |
-| `$book-style-polish` | book-style-polish | 表达打磨、去 AI 味 |
-| `$book-review` | book-review | 质量审查、对标验收 |
-| `$book-package` | book-package | 通过审查后的轻量打包 |
+| `$story` | story | 主入口，自动判断当前任务并路由 |
+| `$story-setup` | story-setup | 初始化拆书写作项目 |
+| `$story-long-analyze` | story-long-analyze | 书籍定位、样文反推、原文拆解、模型提炼 |
+| `$story-long-write` | story-long-write | 栏目文章成稿（底层解码篇/认知破局篇等） |
+| `$story-review` | story-review | 质量审查、对标验收 |
+| `$story-deslop` | story-deslop | 表达打磨、去 AI 味 |
+| `$story-cover` | story-cover | 封面生成 |
+| `$story-import` | story-import | 书籍导入、反向解析 |
+| `$story-short-write` | story-short-write | 短篇文章写作 |
+| `$story-short-analyze` | story-short-analyze | 短篇文章拆解 |
+| `$browser-cdp` | browser-cdp | 浏览器操控、数据采集 |
 
 ## 标准流程
 
 ```
-书籍定位 -> 栏目设计 -> 样文反推 -> 写法库沉淀
--> 原文拆解 -> 模型提炼 -> 现实迁移
--> 单篇试写 -> 对标审查 -> 修正协议 -> 小批量生产
+书籍定位 -> 栏目设计 -> 样文反推 -> 原文拆解
+-> 模型提炼 -> 现实迁移 -> 单篇试写
+-> 对标审查 -> 小批量生产
 ```
+
+说明：
+- 书籍定位、栏目设计、样文反推、原文拆解、模型提炼：由 `$story-long-analyze` 完成
+- 现实迁移：由 `$story-long-analyze` 的模型提炼阶段完成
+- 单篇试写：由 `$story-long-write` 完成
+- 对标审查：由 `$story-review` 完成
+- 表达打磨：由 `$story-deslop` 完成
+- 小批量生产：重复以上流程
+
+反馈循环：
+- 样文反推结果可能回头修正栏目协议（由 story-long-analyze 的 Phase 2 处理）
+- 审查结果可能回头修正原文拆解或模型提炼（由 story-review 的必改清单驱动）
+- 流程不是单向的，每个阶段都可能回到前置阶段修正
 
 ## 写正文前置条件
 
@@ -38,6 +51,7 @@
 - 04-栏目协议/对应栏目协议.md
 - 01-样文反推/对应样文反推.md
 - 02-原文拆解/对应篇章.md
+- 02-原文拆解/第NN篇_标题_研究素材.md（如原文拆解中标记了需研究的案例）
 - 03-模型提炼/对应模型.md
 
 ## 毛选样板
@@ -52,7 +66,10 @@
 
 ## 协作规则
 
+- **Pipeline 闭环。不许停。** 写完底层解码篇 -> 自动触发 story-review（审查） -> 自动触发 story-deslop（修） -> 自动写认知破局篇 -> 自动触发 story-review（审查） -> 自动触发 story-deslop（修） -> 自动进入下一篇。每一步做完自动进入下一步，不等人批准，不问“要不要”“行不行”“可以吗”。审查和修是 pipeline 的强制环节，不是可选步骤，不需要等命令。
 - 一次只做一个明确文件。
 - 不跳过定位、反推、原文拆解直接写正文。
+- **写作顺序不可颠倒：必须先写底层解码篇，再写认知破局篇。** 同一篇原文的两篇文章，底层解码篇必须先完成并通过审查，才能开始写认知破局篇。
+- 字数目标在 04-栏目协议/栏目协议.md 里，自己读，不问。
 - 不照搬竞品表达。
 - 内容质量以审查报告为准，不以生成数量为准。

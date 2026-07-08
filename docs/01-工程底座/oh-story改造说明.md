@@ -23,7 +23,7 @@ oh-story 中值得保留的是工程组织方式。
 拆书系统中对应为：
 
 ```text
-$book
+$story
 ```
 
 它负责把用户请求路由到：
@@ -43,16 +43,16 @@ $book
 拆书系统中对应为：
 
 ```text
-$book-setup
-$book-architect
-$book-reverse-style
-$book-decode-source
-$book-extract-model
-$book-map-application
-$book-write-column
-$book-style-polish
-$book-review
-$book-package
+$story-setup
+$story-long-analyze
+$story-long-analyze
+$story-long-analyze
+$story-long-analyze
+$story-long-analyze
+$story-long-write
+$story-deslop
+$story-review
+$story-package
 ```
 
 每个 skill 只处理一个明确阶段。
@@ -65,13 +65,13 @@ $book-package
 
 建议拆成：
 
-- book-architect：书籍定位、用户定位、栏目体系。
-- style-reverser：竞品样文反推、写法库沉淀。
-- source-decoder：原文拆解、证据提取、篇章结构。
-- model-extractor：模型提炼、推理链整理。
-- application-mapper：现实迁移、用户场景映射。
-- column-writer：栏目文章成稿。
-- quality-reviewer：质量审查、跑偏检测、修改建议。
+- story-architect：书籍定位、用户定位、栏目体系。
+- story-deslop：竞品样文反推、写法库沉淀。
+- chapter-extractor：原文拆解、证据提取、篇章结构。
+- story-long-analyze：模型提炼、推理链整理。
+- story-long-analyze：现实迁移、用户场景映射。
+- narrative-writer：栏目文章成稿。
+- consistency-checker：质量审查、跑偏检测、修改建议。
 
 ### 2.4 hooks 守卫
 
@@ -180,37 +180,37 @@ oh-story 的内容逻辑必须替换。
 用户应该可以这样用：
 
 ```text
-$book-setup
+$story-setup
 ```
 
 初始化一个拆书写作项目。
 
 ```text
-$book-architect
+$story-long-analyze
 ```
 
 完成书籍定位、用户定位、栏目体系。
 
 ```text
-$book-reverse-style
+$story-long-analyze
 ```
 
 反推竞品或样文写法。
 
 ```text
-$book-decode-source
+$story-long-analyze
 ```
 
 拆解原文篇章。
 
 ```text
-$book-write-column
+$story-long-write
 ```
 
 写栏目文章。
 
 ```text
-$book-review
+$story-review
 ```
 
 审查文章质量。
@@ -218,7 +218,7 @@ $book-review
 主入口：
 
 ```text
-$book
+$story
 ```
 
 负责根据用户意图自动路由。
@@ -268,4 +268,3 @@ $book
 装入拆书写文章流程，
 先用毛选样板验证质量。
 ```
-

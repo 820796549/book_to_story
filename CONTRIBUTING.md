@@ -21,20 +21,27 @@ references/ 下的方法库文件欢迎补充：
 1. 在 samples/ 下创建新目录。
 2. 包含完整的生产流程文件（定位、反推、拆解、模型、成稿、审查）。
 3. 在 README 中说明这本书的定位和栏目设计。
+4. 提交前必须脱敏：删除本地绝对路径、私人资料路径、未授权竞品原文、账号信息和临时追踪日志。
 
 ## 开发指南
 
 ### 本地测试
 
-python scripts/book-setup.py
+运行静态校验：
+
+```bash
+bash scripts/static-check.sh
+```
 
 ### 校验
 
+```bash
 python -B -c "import json, pathlib, tomllib; root=pathlib.Path('.'); json.load(open(root/'.codex/hooks.json')); [tomllib.loads(f.read_text()) for f in (root/'.codex/agents').glob('*.toml')]"
+```
 
 ### 目录结构
 
-.agents/skills/book*/   # skill 文件
+.agents/skills/story*/  # skill 文件
 .codex/agents/          # agent 配置
 .codex/hooks/           # hooks 脚本
 docs/                   # 设计文档

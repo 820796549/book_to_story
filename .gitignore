@@ -13,6 +13,25 @@ Thumbs.db
 
 # Project
 oh-story-claudecode-main/
+.story-deployed
+.book-deployed
+
+# Local book/article production workspace
+00-项目定义/
+01-样文反推/
+02-原文拆解/
+03-模型提炼/
+04-栏目协议/
+05-文章生产/
+06-质量审查/
+07-方法库/
+08-项目打包/
+参考资料/
+追踪/
+references-审核记录.md
+
+# Generated local deployment cache
+.codex/skills/
 
 # Tracking
 **/追踪/上下文.md
@@ -21,4 +40,7 @@ oh-story-claudecode-main/
 # Temp
 *.tmp
 *.log
+tmp_patch.py
 
+# Legacy local migration helper
+scripts/book-setup.py
