@@ -115,6 +115,13 @@ def read_active_book(root: Path) -> Path | None:
                 candidate = None  # type: ignore[assignment]
             if candidate and candidate.exists():
                 return candidate
+    projects_dir = root / "projects"
+    if projects_dir.is_dir():
+        for book in projects_dir.iterdir():
+            if not book.is_dir():
+                continue
+            if (book / "00-项目定义").is_dir() or (book / "02-原文拆解").is_dir() or (book / "05-文章生产").is_dir():
+                return book
     for track in root.glob("**/追踪"):
         if any(part.startswith(".") for part in track.relative_to(root).parts):
             continue
@@ -128,6 +135,37 @@ def read_active_book(root: Path) -> Path | None:
             continue
         return body_file.parent
     return None
+
+
+def book_root_for_path(root: Path, abs_path: Path) -> Path:
+    """Resolve the current book project root for a path.
+
+    The repository root stores the system template. Real book projects should live
+    under projects/<book>/, but legacy root-level projects are still supported.
+    """
+    try:
+        p = abs_path.resolve()
+    except Exception:
+        p = abs_path
+    cur = p if p.is_dir() else p.parent
+    root_resolved = root.resolve()
+    while True:
+        try:
+            cur.relative_to(root_resolved)
+        except Exception:
+            break
+        if (
+            (cur / "00-项目定义").is_dir()
+            or (cur / "02-原文拆解").is_dir()
+            or (cur / "04-栏目协议").is_dir()
+            or (cur / "05-文章生产").is_dir()
+        ):
+            return cur
+        if cur == root_resolved:
+            break
+        cur = cur.parent
+    active = read_active_book(root)
+    return active if active else root
 
 
 def hook_context(event: str, text: str) -> dict[str, Any]:
@@ -273,6 +311,59 @@ def _wordcount_finding(abs_path: Path, text: str) -> str | None:
     return None
 
 
+
+def _column_wordcount_finding(abs_path: Path, text: str, root: Path) -> str | None:
+    """拆书文章字数检查：从 04-栏目协议/栏目协议.md 读对应栏目的字数下限，实际低于 90% 提示。
+    与 _wordcount_finding 同模式，但目标来自栏目协议而非细纲。"""
+    base = abs_path.name
+    if "底层解码篇" in base:
+        col_key = "底层解码篇"
+    elif "认知破局篇" in base:
+        col_key = "认知破局篇"
+    else:
+        return None
+    book_root = book_root_for_path(root, abs_path)
+    protocol = book_root / "04-栏目协议" / "栏目协议.md"
+    if not protocol.exists():
+        return None
+    try:
+        proto_text = protocol.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    all_lines = proto_text.splitlines()
+    target = None
+    in_section = False
+    for idx, line in enumerate(all_lines):
+        stripped = line.strip()
+        if (stripped.startswith("## ") or stripped.startswith("### ")) and col_key in stripped:
+            in_section = True
+            continue
+        if in_section and stripped.startswith("## "):
+            break
+        if in_section and "字数目标" in stripped:
+            # Number on this line or next non-empty line
+            target_line = stripped
+            if not re.search(r"(\d{4,5})", target_line):
+                for nl in all_lines[idx+1:]:
+                    if nl.strip():
+                        target_line = nl.strip()
+                        break
+            m = re.search(r"(\d{4,5})", target_line)
+            if m:
+                target = int(m.group(1))
+            break
+    if not target:
+        return None
+    actual = len(text)
+    if actual < target * 0.9:
+        return (
+            f"字数：{safe_rel(root, abs_path)} 实际 {actual} 字"
+            f" < {col_key} 目标 {target} 的 90%（{int(target * 0.9)}）。"
+            f" 对照栏目协议字数预算定位欠账段落、扩写到配额。"
+        )
+    return None
+
+
 def _discover_all_books(root: Path) -> list[Path]:
     books: list[Path] = []
     seen: set[str] = set()
@@ -405,6 +496,87 @@ def target_paths_from_hook(obj: dict[str, Any]) -> list[Path]:
     return [resolve_target(root, t) for t in raw_targets if t]
 
 
+
+
+
+def _check_research_material_guard(abs_path: Path, root: Path) -> str | None:
+    """Check if research material exists when original analysis marks section 13.
+    Block writing to 05-文章生产/成稿/ or 05-文章生产/草稿/ if the corresponding
+    original analysis file has '需补充研究的历史案例' but the research material file is missing."""
+    base = abs_path.name
+    parent = abs_path.parent.name
+    # Only check for 拆书 article files
+    if parent not in ("成稿", "草稿") or abs_path.parent.parent.name != "05-文章生产":
+        return None
+    # Extract the article number (e.g., "第02篇")
+    m = re.match(r"(第\d+篇)", base)
+    if not m:
+        return None
+    prefix = m.group(1)
+    # Find corresponding original analysis file in 02-原文拆解/
+    book_root = book_root_for_path(root, abs_path)
+    analysis_dir = book_root / "02-原文拆解"
+    if not analysis_dir.is_dir():
+        return None
+    analysis_file = None
+    for f in analysis_dir.iterdir():
+        if f.name.startswith(prefix) and "_原文拆解" in f.name and f.suffix == ".md":
+            analysis_file = f
+            break
+    if not analysis_file:
+        return None
+    # Check if analysis file has section 13 (需补充研究的历史案例)
+    try:
+        analysis_text = analysis_file.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    if "需补充研究的历史案例" not in analysis_text:
+        return None
+    # Check if corresponding research material file exists
+    # Pattern: 第NN篇_标题_研究素材.md
+    research_exists = False
+    for f in analysis_dir.iterdir():
+        if f.name.startswith(prefix) and "_研究素材" in f.name and f.suffix == ".md":
+            research_exists = True
+            break
+    if not research_exists:
+        return (
+            "Research material blocked: " + safe_rel(root, abs_path)
+            + " requires research material because "
+            + safe_rel(root, analysis_file)
+            + " has section 13 (需补充研究的历史案例), but no corresponding research material file ("
+            + prefix + "_*_研究素材.md) found in 02-原文拆解/. "
+            + "Run story-long-analyze Phase 3 historical case research step first."
+        )
+    return None
+
+def _check_column_order(abs_path: Path, root: Path) -> str | None:
+    """Check writing order: 认知破局篇 must be written after 底层解码篇."""
+    base = abs_path.name
+    if "认知破局篇" not in base:
+        return None
+    m = re.match(r"(第\d+篇)", base)
+    if not m:
+        return None
+    prefix = m.group(1)
+    parent = abs_path.parent
+    for f in parent.iterdir():
+        if f.name.startswith(prefix) and "底层解码篇" in f.name and f.suffix == ".md":
+            return None
+    book_root = book_root_for_path(root, abs_path)
+    for prose_dir in ["05-文章生产/成稿", "05-文章生产/草稿"]:
+        prose_abs = book_root / prose_dir
+        if prose_abs.is_dir():
+            for f in prose_abs.iterdir():
+                if f.name.startswith(prefix) and "底层解码篇" in f.name and f.suffix == ".md":
+                    return None
+    return (
+        "Column order blocked: " + safe_rel(root, abs_path) + " is 认知破局篇, "
+        "but corresponding 底层解码篇 (" + prefix + "_底层解码篇_*) not found. "
+        "Must write 底层解码篇 first, then 认知破局篇."
+    )
+
+
 def prose_block_reason(root: Path, abs_path: Path) -> str | None:
     base = abs_path.name
     parent = abs_path.parent.name
@@ -455,6 +627,26 @@ def pre_tool_prose_guard(obj: dict[str, Any]) -> None:
                     "hookEventName": "PreToolUse",
                     "permissionDecision": "deny",
                     "permissionDecisionReason": reason,
+                }
+            })
+            return
+        order_reason = _check_column_order(path, root)
+        if order_reason:
+            emit({
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": order_reason,
+                }
+            })
+            return
+        research_reason = _check_research_material_guard(path, root)
+        if research_reason:
+            emit({
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": research_reason,
                 }
             })
             return
@@ -642,6 +834,8 @@ def stop_event() -> None:
                 continue
             findings = prose_net_findings(text)
             wc = _wordcount_finding(abs_path, text)
+            if not wc:
+                wc = _column_wordcount_finding(abs_path, text, root)
             if wc:
                 findings.append(wc)
             if findings:

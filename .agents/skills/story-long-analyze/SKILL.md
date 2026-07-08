@@ -33,7 +33,7 @@ metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claud
 
 ### Phase 1：书籍定位
 
-创建或更新 `00-项目定义/` 下的文件：
+创建或更新当前书籍项目 `projects/<书名>/00-项目定义/` 下的文件：
 
 **书籍定位.md** 必须包含：
 ```
@@ -91,7 +91,7 @@ metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claud
 14. 禁止入库项
 15. 对栏目协议的修正
 
-输出到 `01-样文反推/`。
+输出到当前书籍项目的 `01-样文反推/`。
 
 ### Phase 3：原文拆解
 
@@ -131,12 +131,12 @@ metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claud
 对每个高优先级和中优先级案例，**调用 story-researcher agent 用 CDP 浏览器搜索补充资料**。调用方式：
 
 ```
-Agent(agent_type: "story-researcher", prompt: "query={案例名称}+历史背景&type=历史考证&context=拆书文章写作需要补充历史案例细节&project_dir={项目根目录}&output_path={项目根目录}/02-原文拆解/{对应篇章编号}_{标题}_研究素材.md")
+Agent(agent_type: "story-researcher", prompt: "query={案例名称}+历史背景&type=历史考证&context=拆书文章写作需要补充历史案例细节&project_dir={当前书籍项目目录}&output_path={当前书籍项目目录}/02-原文拆解/{对应篇章编号}_{标题}_研究素材.md")
 ```
 
 如果 story-researcher agent 不可用（unknown agent_type 或未部署），降级为手动搜索：用 WebSearch 搜索关键词，至少访问 2 个独立来源交叉验证。
 
-输出到 `02-原文拆解/第NN篇_标题_研究素材.md`。
+输出到当前书籍项目的 `02-原文拆解/第NN篇_标题_研究素材.md`。
 
 每个案例需要查的信息：
 - 历史事件：名称、时间、地点、参与方、起因、经过、结果、与原文论点的关系、可用画面细节

@@ -15,8 +15,13 @@ Thumbs.db
 oh-story-claudecode-main/
 .story-deployed
 .book-deployed
+.active-book
 
 # Local book/article production workspace
+projects/*
+!projects/.gitkeep
+
+# Legacy root-level workspace compatibility
 00-项目定义/
 01-样文反推/
 02-原文拆解/

@@ -115,6 +115,13 @@ def read_active_book(root: Path) -> Path | None:
                 candidate = None  # type: ignore[assignment]
             if candidate and candidate.exists():
                 return candidate
+    projects_dir = root / "projects"
+    if projects_dir.is_dir():
+        for book in projects_dir.iterdir():
+            if not book.is_dir():
+                continue
+            if (book / "00-项目定义").is_dir() or (book / "02-原文拆解").is_dir() or (book / "05-文章生产").is_dir():
+                return book
     for track in root.glob("**/追踪"):
         if any(part.startswith(".") for part in track.relative_to(root).parts):
             continue
@@ -128,6 +135,37 @@ def read_active_book(root: Path) -> Path | None:
             continue
         return body_file.parent
     return None
+
+
+def book_root_for_path(root: Path, abs_path: Path) -> Path:
+    """Resolve the current book project root for a path.
+
+    The repository root stores the system template. Real book projects should live
+    under projects/<book>/, but legacy root-level projects are still supported.
+    """
+    try:
+        p = abs_path.resolve()
+    except Exception:
+        p = abs_path
+    cur = p if p.is_dir() else p.parent
+    root_resolved = root.resolve()
+    while True:
+        try:
+            cur.relative_to(root_resolved)
+        except Exception:
+            break
+        if (
+            (cur / "00-项目定义").is_dir()
+            or (cur / "02-原文拆解").is_dir()
+            or (cur / "04-栏目协议").is_dir()
+            or (cur / "05-文章生产").is_dir()
+        ):
+            return cur
+        if cur == root_resolved:
+            break
+        cur = cur.parent
+    active = read_active_book(root)
+    return active if active else root
 
 
 def hook_context(event: str, text: str) -> dict[str, Any]:
@@ -284,7 +322,8 @@ def _column_wordcount_finding(abs_path: Path, text: str, root: Path) -> str | No
         col_key = "认知破局篇"
     else:
         return None
-    protocol = root / "04-栏目协议" / "栏目协议.md"
+    book_root = book_root_for_path(root, abs_path)
+    protocol = book_root / "04-栏目协议" / "栏目协议.md"
     if not protocol.exists():
         return None
     try:
@@ -475,7 +514,8 @@ def _check_research_material_guard(abs_path: Path, root: Path) -> str | None:
         return None
     prefix = m.group(1)
     # Find corresponding original analysis file in 02-原文拆解/
-    analysis_dir = root / "02-原文拆解"
+    book_root = book_root_for_path(root, abs_path)
+    analysis_dir = book_root / "02-原文拆解"
     if not analysis_dir.is_dir():
         return None
     analysis_file = None
@@ -523,8 +563,9 @@ def _check_column_order(abs_path: Path, root: Path) -> str | None:
     for f in parent.iterdir():
         if f.name.startswith(prefix) and "底层解码篇" in f.name and f.suffix == ".md":
             return None
+    book_root = book_root_for_path(root, abs_path)
     for prose_dir in ["05-文章生产/成稿", "05-文章生产/草稿"]:
-        prose_abs = root / prose_dir
+        prose_abs = book_root / prose_dir
         if prose_abs.is_dir():
             for f in prose_abs.iterdir():
                 if f.name.startswith(prefix) and "底层解码篇" in f.name and f.suffix == ".md":

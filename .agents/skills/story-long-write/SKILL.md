@@ -27,18 +27,18 @@ metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claud
 写正文前必须检查：
 
 ```
-00-项目定义/书籍定位.md
-00-项目定义/栏目体系.md
-04-栏目协议/对应栏目协议.md
-01-样文反推/对应样文反推.md
-02-原文拆解/对应篇章.md
-02-原文拆解/第NN篇_标题_研究素材.md（如原文拆解中标记了需研究的案例）
-03-模型提炼/对应模型.md
+projects/<书名>/00-项目定义/书籍定位.md
+projects/<书名>/00-项目定义/栏目体系.md
+projects/<书名>/04-栏目协议/对应栏目协议.md
+projects/<书名>/01-样文反推/对应样文反推.md
+projects/<书名>/02-原文拆解/对应篇章.md
+projects/<书名>/02-原文拆解/第NN篇_标题_研究素材.md（如原文拆解中标记了需研究的案例）
+projects/<书名>/03-模型提炼/对应模型.md
 ```
 
 缺少关键前置材料时，不直接写正文。返回提示："缺少前置材料，请先执行 $story-long-analyze"。
 
-**硬性校验：如果 02-原文拆解/对应篇章.md 中存在「13. 需补充研究的历史案例」章节（标记了案例），则必须存在对应的 02-原文拆解/第NN篇_标题_研究素材.md 文件。缺少研究素材时拦截写正文，返回提示："缺少研究素材，请先执行 story-long-analyze 的 Phase 3 历史案例研究步骤以生成研究素材。"**
+**硬性校验：如果当前书籍项目的 02-原文拆解/对应篇章.md 中存在「13. 需补充研究的历史案例」章节（标记了案例），则必须存在对应的 02-原文拆解/第NN篇_标题_研究素材.md 文件。缺少研究素材时拦截写正文，返回提示："缺少研究素材，请先执行 story-long-analyze 的 Phase 3 历史案例研究步骤以生成研究素材。"**
 
 ### 标准输入读取顺序
 
@@ -151,20 +151,20 @@ macOS/Linux 可用 `wc -m` 备选。字数未达标禁止结束。
 **步骤3：AI模式检查**
 运行脚本检查 AI 句式：
 ```bash
-node scripts/check-ai-patterns.js --check 05-文章生产/成稿/文章文件名.md
+node scripts/check-ai-patterns.js --check projects/<书名>/05-文章生产/成稿/文章文件名.md
 ```
 检查四类问题：先否定再肯定的高危AI句式、破折号、碎句号、长段落。①②必须回正文改掉、复扫到0；③④确属问题就改。
 
 **步骤4：标点规范化**
 运行脚本清除残留标点问题：
 ```bash
-node scripts/normalize-punctuation.js 05-文章生产/成稿/文章文件名.md
+node scripts/normalize-punctuation.js projects/<书名>/05-文章生产/成稿/文章文件名.md
 ```
 
 **步骤5：退化检查**
 运行脚本检测模型退化：
 ```bash
-node scripts/check-degeneration.js --check 05-文章生产/成稿/文章文件名.md
+node scripts/check-degeneration.js --check projects/<书名>/05-文章生产/成稿/文章文件名.md
 ```
 命中硬信号（复读/截断/拒绝语/工程词）时重写受影响部分。
 

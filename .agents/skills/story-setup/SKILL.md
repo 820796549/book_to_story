@@ -16,7 +16,7 @@ metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claud
 
 1. 检查当前目录是否已部署过（存在 `.story-deployed`）
    - 如果已存在 -> 确认是否重新部署
-2. 检查是否有书籍目录（包含 `00-项目定义/` 或 `02-原文拆解/` 子目录的目录）
+2. 检查是否有书籍目录（优先 `projects/<书名>/`，且包含 `00-项目定义/` 或 `02-原文拆解/` 子目录）
    - 有 -> 识别为拆书项目，显示当前项目信息
    - 无 -> 识别为新项目
 3. 检测目标 CLI：
@@ -31,7 +31,9 @@ metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claud
 
 ### 2.1 标准目录
 
-初始化时创建（只在文件不存在时创建）：
+默认在 `projects/<书名>/` 下创建书籍项目目录。若用户未提供书名，先创建 `projects/未命名书籍/`，并提示用户稍后改名。
+
+在书籍项目目录内创建（只在文件不存在时创建）：
 
 ```
 00-项目定义/
@@ -44,6 +46,12 @@ metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claud
 07-方法库/
 08-项目打包/
 追踪/
+```
+
+同时在仓库根目录创建或更新 `.active-book`，内容为当前书籍项目相对路径，例如：
+
+```text
+projects/未命名书籍
 ```
 
 推荐子目录：
@@ -71,7 +79,7 @@ metadata: {"openclaw":{"source":"https://github.com/worldwonderer/oh-story-claud
 
 ### 2.3 部署 AGENTS.md
 
-读取 `references/codex/AGENTS.md.tmpl`，替换占位符，写入项目根 `AGENTS.md`。
+读取 `references/codex/AGENTS.md.tmpl`，替换占位符，写入仓库根 `AGENTS.md`。书籍内容仍放在 `projects/<书名>/`。
 
 **合并策略**：用户已有 AGENTS.md 时，按 marker/section 合并：
 1. 优先识别 story-setup 管理块标记（如果旧项目已有标记，只替换标记内内容）
